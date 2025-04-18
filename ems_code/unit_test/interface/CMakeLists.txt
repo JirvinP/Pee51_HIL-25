@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.27)
+project(main)
+add_executable(testversie test.c ems.c ui.c UARTqueue.c)
+target_link_libraries(testversie check)
+target_compile_options(testversie PRIVATE -std=c18 -Wall -Wextra -Wpedantic -g3 -O0)

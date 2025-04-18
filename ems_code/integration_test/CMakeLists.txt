@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.27)
+project(integratietest)
+find_package(check REQUIRED)
+add_executable(integratietest test.c  ems.c  spiQueue.c  UARTqueue.c  ui.c)
+target_link_libraries(integratietest PRIVATE check)
+target_compile_options(integratietest PRIVATE -std=c18 -Wall -Wextra -Wpedantic -g3 -O0)
