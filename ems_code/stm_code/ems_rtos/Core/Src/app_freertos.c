@@ -204,8 +204,11 @@ void MX_FREERTOS_Init(void) {
 	logprint(LOG_OK, "DMA initialized\r\n", &uart_queue);
 
 	/*spi queue init*/
-	spiQueueTransmit = spiQueueCreate(100);
-	spiQueueReceive = spiQueueCreate(100);
+	struct structSpiQueue* spiQueueTransmit = NULL;
+	spiQueueCreate(&spiQueueTransmit, 100);
+
+	struct structSpiQueue* spiQueueReceive = NULL;
+	spiQueueCreate(&spiQueueReceive, 100);
 
 	if (spiQueueTransmit == NULL || spiQueueReceive == NULL) {
 		logprint(LOG_FAIL, "SPI buffers could not be initialized\r\n", &uart_queue);
@@ -302,8 +305,8 @@ void SPItxrxtask(void *argument)
 		HAL_GPIO_WritePin(THREAD_2_GPIO_Port, THREAD_2_Pin, GPIO_PIN_SET);
 		spiTransferState = SPI_TRANSFER_BUSY;
 
-		spiQueueGetArray(spiQueueTransmit, spiQueueTransmitArray);
-		if (HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t*)spiQueueTransmitArray, (uint8_t*)spiQueueReceiveArray, SPIQUEUE_SIZE) != HAL_OK) {
+		spiQueueGetArray(spiQueueTransmit, spiQueueTransmitArray, SQ_PACKET_SIZE);
+		if (HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t*)spiQueueTransmitArray, (uint8_t*)spiQueueReceiveArray, SQ_PACKET_SIZE) != HAL_OK) {
 			Error_Handler();
 		}
 		while (spiTransferState != SPI_TRANSFER_DONE)
@@ -312,8 +315,10 @@ void SPItxrxtask(void *argument)
 		if (spiQueueReceiveArray[0] != 0x00 && spiQueueReceiveArray[0] != 0xFF) {
 			// check if the rx array is the same as last time
 			// if changed put rx array into queue
-			if (spiQueueNoDuplicate(spiQueueReceiveArray)) {
-				spiQueuePostArray(spiQueueReceive, spiQueueReceiveArray, true);
+			bool noDuplicate = false;
+			spiQueueNoDuplicate(&noDuplicate, spiQueueReceiveArray, SQ_PACKET_SIZE);
+			if (noDuplicate) {
+				spiQueuePostArray(spiQueueReceive, spiQueueReceiveArray, SQ_PACKET_SIZE, true);
 			}
 		}
 
@@ -321,16 +326,16 @@ void SPItxrxtask(void *argument)
 		spiQueueProcessAck(spiQueueTransmit, spiQueueReceive, true);
 
 		if (spiQueueReceive->sizeCurrent > 0) {
-			if (spiQueueReceive->headFramePtr->crc.good == false) {
-				spiQueueFrameRemove(spiQueueReceive);
+			if (spiQueueReceive->headPacketPtr->crc.good == false) {
+				spiQueuePacketRemove(spiQueueReceive);
 			} else {
-				if (spiQueueReceive->headFramePtr->identifier == 0xA9) {
+				if (spiQueueReceive->headPacketPtr->identifier == 0xA9) {
 					latencyStored = latency;
 					latencyAnimator = latencyAnimator < 3 ? latencyAnimator + 1 : 0;
 				} else {
-					parse_simulation_data(sys, spiQueueReceive->headFramePtr);
+					parse_simulation_data(sys, spiQueueReceive->headPacketPtr);
 				}
-				spiQueueFrameRemove(spiQueueReceive);
+				spiQueuePacketRemove(spiQueueReceive);
 			}
 		}
 		spiTransferState = SPI_TRANSFER_IDLE;

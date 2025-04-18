@@ -167,7 +167,7 @@ void rate_limit(void) {
 	sleep(1);
 }
 
-void parse_simulation_data(struct system* sys, struct structFrame* dataframe) {
+void parse_simulation_data(struct system* sys, struct structPacket* dataframe) {
 
 	/*stm spi functions*/
 	switch (dataframe->identifier) {
@@ -365,7 +365,7 @@ void ready_setpoint(struct system* sys, int ems_state) {
 }
 
 void send_setpoints(struct system* sys, struct structSpiQueue* tx_buffer) {
-	spiQueuePostDec(tx_buffer, SETPOINT_BATTERY1_ID, sys->goat_preference->battery_power[0]);
+	spiQueuePostFrac(tx_buffer, SETPOINT_BATTERY1_ID, sys->goat_preference->battery_power[0]);
 
 	double test = 0.0;
 
@@ -374,23 +374,23 @@ void send_setpoints(struct system* sys, struct structSpiQueue* tx_buffer) {
 	}
 
 
-	if (tx_buffer->tailFramePtr->payload.frac64 > 0  && tx_buffer->tailFramePtr->payload.frac64 < 0.1) {
-		spiQueueFrameRemove(tx_buffer);
+	if (tx_buffer->tailPacketPtr->payload.frac64 > 0  && tx_buffer->tailPacketPtr->payload.frac64 < 0.1) {
+		spiQueuePacketRemove(tx_buffer);
 	}
 
-	spiQueuePostDec(tx_buffer, SETPOINT_BATTERY2_ID, sys->goat_preference->battery_power[1]);
-	if (tx_buffer->tailFramePtr->payload.frac64 > 0  && tx_buffer->tailFramePtr->payload.frac64 < 0.1) {
-		spiQueueFrameRemove(tx_buffer);
+	spiQueuePostFrac(tx_buffer, SETPOINT_BATTERY2_ID, sys->goat_preference->battery_power[1]);
+	if (tx_buffer->tailPacketPtr->payload.frac64 > 0  && tx_buffer->tailPacketPtr->payload.frac64 < 0.1) {
+		spiQueuePacketRemove(tx_buffer);
 	}
 
-	spiQueuePostDec(tx_buffer, SETPOINT_DG1_ID, sys->goat_preference->dg_power[0]);
-	if (tx_buffer->tailFramePtr->payload.frac64 > 0  && tx_buffer->tailFramePtr->payload.frac64 < 0.1) {
-		spiQueueFrameRemove(tx_buffer);
+	spiQueuePostFrac(tx_buffer, SETPOINT_DG1_ID, sys->goat_preference->dg_power[0]);
+	if (tx_buffer->tailPacketPtr->payload.frac64 > 0  && tx_buffer->tailPacketPtr->payload.frac64 < 0.1) {
+		spiQueuePacketRemove(tx_buffer);
 	}
 
-	spiQueuePostDec(tx_buffer, SETPOINT_DG2_ID, sys->goat_preference->dg_power[1]);
-	if (tx_buffer->tailFramePtr->payload.frac64 > 0  && tx_buffer->tailFramePtr->payload.frac64 < 0.1) {
-		spiQueueFrameRemove(tx_buffer);
+	spiQueuePostFrac(tx_buffer, SETPOINT_DG2_ID, sys->goat_preference->dg_power[1]);
+	if (tx_buffer->tailPacketPtr->payload.frac64 > 0  && tx_buffer->tailPacketPtr->payload.frac64 < 0.1) {
+		spiQueuePacketRemove(tx_buffer);
 	}
 }
 

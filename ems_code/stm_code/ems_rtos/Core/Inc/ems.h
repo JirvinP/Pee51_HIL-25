@@ -128,7 +128,7 @@ void destroy_sys(struct system* sys);
 void execute_subroutine(struct system* sys);
 void test_fill(struct system* sys);
 void send_setpoints(struct system* sys, struct structSpiQueue* tx_buffer);
-void parse_simulation_data(struct system* sys, struct structFrame* dataframe);
+void parse_simulation_data(struct system* sys, struct structPacket* dataframe);
 void rate_limit(void);
 
 // extern struct system* sys;
