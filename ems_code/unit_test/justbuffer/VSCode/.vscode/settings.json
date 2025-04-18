@@ -1,0 +1,19 @@
+{
+    "workbench.activityBar.location": "top",
+    "workbench.sideBar.location": "right",
+    "workbench.startupEditor": "none",
+    "explorer.confirmDelete": true,
+    "cmake.automaticReconfigure": false,
+    "cmake.configureOnEdit": false,
+    "cmake.configureOnOpen": false,
+    "C_Cpp.clang_format_style": "{ BasedOnStyle: LLVM, UseTab: Always, BraceBreakingStyle: Attach, IndentWidth: 4, TabWidth: 4, PointerAlignment: Left, ColumnLimit: 0}",
+    "C_Cpp.formatting": "clangFormat",
+    "cSpell.enabledFileTypes": {
+        "c": true,
+        "cpp": true
+    },
+    "files.associations": {
+        "compose.yaml": "yaml",
+        "spiqueueevil.h": "c"
+    }
+}
