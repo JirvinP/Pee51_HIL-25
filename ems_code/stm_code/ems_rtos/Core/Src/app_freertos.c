@@ -330,8 +330,10 @@ void SPItxrxtask(void *argument)
 				spiQueuePacketRemove(spiQueueReceive);
 			} else {
 				if (spiQueueReceive->headPacketPtr->identifier == 0xA9) {
-					latencyStored = latency;
-					latencyAnimator = latencyAnimator < 3 ? latencyAnimator + 1 : 0;
+					if(spiQueueReceive->headPacketPtr->payload.uint32 == counterid){
+						latencyStored = latency;
+						latencyAnimator = latencyAnimator < 3 ? latencyAnimator + 1 : 0;
+					}
 				} else {
 					parse_simulation_data(sys, spiQueueReceive->headPacketPtr);
 				}
