@@ -87,7 +87,6 @@ extern CRC_HandleTypeDef hcrc;
 #define GETCRC(ARRAY) HAL_CRC_Calculate(&hcrc, (uint32_t*)ARRAY, SQ_FRAME_SIZE)
 /** @brief overload macro which will transform into spiqueuepostint or spiqueuepostfrac depending on payloadvaluearg */
 #define spiQueuePost(structSpiQueuePtrArg, identifierArg, payloadValueArg) _Generic((payloadValueArg), \
-	int: spiQueuePostInt,                                                                              \
 	uint8_t: spiQueuePostInt,                                                                          \
 	uint16_t: spiQueuePostInt,                                                                         \
 	uint32_t: spiQueuePostInt,                                                                         \
