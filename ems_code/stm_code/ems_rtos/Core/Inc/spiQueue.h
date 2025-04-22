@@ -10,8 +10,8 @@
  * @file spiQueue.h
  * @author Sefa Ozturk (S.H.Ozturk@outlook.com)
  * @brief queue for use with SPI
- * @version 0.5
- * @date 2025-01-28
+ * @version 0.6
+ * @date 2025-04-22
  */
 
 #ifndef SPIQUEUE_H
@@ -163,6 +163,10 @@ struct structCrcData {
 	struct structCrcConfig config;			 /**< holds crcdata config paramaters */
 	struct structCrcDataAutomatic automatic; /**< holds crcdata data inititialized by crcinit() */
 };
+
+#if VSCODEPROJECT
+	struct structCrcData crcData = {0};
+#endif
 
 /**
  * @brief crc value sub struct for converting crcvalue between two uint8[2]s and uint16

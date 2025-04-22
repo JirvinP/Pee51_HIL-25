@@ -2,8 +2,8 @@
  * @file spiQueue.c
  * @author Sefa Ozturk (S.H.Ozturk@outlook.com)
  * @brief queue for use with SPI
- * @version 0.5
- * @date 2025-01-28
+ * @version 0.6
+ * @date 2025-04-22
  */
 
 #include "spiQueue.h"
