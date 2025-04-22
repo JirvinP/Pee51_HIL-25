@@ -20,7 +20,8 @@ uint8_t errorVal = ec_no_error;
  * @brief method to debug
  * @param[in] errorCodeArg enums from the global error code list in spiqueue.h
  */
-void errorCatcher(uint8_t errorCodeArg) {
+void errorCatcher(uint8_t errorCodeArg)
+{
 	errorVal = errorCodeArg;
 #if !NOERRORPRINT
 	PRINT("\x1B[31merrorVal: 0x%02X\n\x1B[0m", errorCodeArg);
@@ -30,13 +31,14 @@ void errorCatcher(uint8_t errorCodeArg) {
 /**
  * @brief resets errorval to ec_no_error
  */
-void errorReset(void) {
+void errorReset(void)
+{
 	errorVal = ec_no_error;
 }
 
 // CRC ----------------------------------------------------------------------------------------------------------------------
 
-static void crcCalcTable(struct structCrcData* crcDataArg);
+static void crcCalcTable(struct structCrcData *crcDataArg);
 static uint32_t crcReflect(uint32_t bitSequenceArg, uint8_t bitSequenceWidthArg);
 
 /**
@@ -45,25 +47,31 @@ static uint32_t crcReflect(uint32_t bitSequenceArg, uint8_t bitSequenceWidthArg)
  * @retval 0 on success, -1 on failure
  * @note - Equipped with errorCatcher()
  */
-int8_t crcInit(struct structCrcData* crcDataArg) {
-	if (!((crcDataArg->config.bitLength == 8) || (crcDataArg->config.bitLength == 16) || (crcDataArg->config.bitLength == 32))) {
+int8_t crcInit(struct structCrcData *crcDataArg)
+{
+	if (!((crcDataArg->config.bitLength == 8) || (crcDataArg->config.bitLength == 16) || (crcDataArg->config.bitLength == 32)))
+	{
 		errorCatcher(ec_crc_length_bad);
 		return -1;
 	}
 	uint32_t bitLengthMaskTemp = 0xFFFFFFFF >> (32 - crcDataArg->config.bitLength);
-	if (crcDataArg->config.polynomial == 0) {
+	if (crcDataArg->config.polynomial == 0)
+	{
 		errorCatcher(ec_crc_polynomial_zero);
 		return -1;
 	}
-	if (crcDataArg->config.polynomial > bitLengthMaskTemp) {
+	if (crcDataArg->config.polynomial > bitLengthMaskTemp)
+	{
 		errorCatcher(ec_crc_polynomial_oversized);
 		return -1;
 	}
-	if (crcDataArg->config.initialValue > bitLengthMaskTemp) {
+	if (crcDataArg->config.initialValue > bitLengthMaskTemp)
+	{
 		errorCatcher(ec_crc_initvalue_oversized);
 		return -1;
 	}
-	if (crcDataArg->config.finalXorValue > bitLengthMaskTemp) {
+	if (crcDataArg->config.finalXorValue > bitLengthMaskTemp)
+	{
 		errorCatcher(ec_crc_finalxor_oversized);
 		return -1;
 	}
@@ -79,26 +87,38 @@ int8_t crcInit(struct structCrcData* crcDataArg) {
  * @param[in] arraySizeArg size of arrayarg
  * @retval checksum masked depending on crc bitlength
  */
-uint32_t crcCalcSlow(struct structCrcData* crcDataArg, uint8_t arrayArg[], uint8_t arraySizeArg) {
+uint32_t crcCalcSlow(struct structCrcData *crcDataArg, uint8_t arrayArg[], uint8_t arraySizeArg)
+{
 	uint32_t checksum = crcDataArg->config.initialValue;
 	uint32_t highestBitPos = 1 << (crcDataArg->config.bitLength - 1);
-	for (uint8_t byte = 0; byte < arraySizeArg; byte++) {
-		if (crcDataArg->config.inputReflected) {
+	for (uint8_t byte = 0; byte < arraySizeArg; byte++)
+	{
+		if (crcDataArg->config.inputReflected)
+		{
 			checksum ^= crcReflect(arrayArg[byte], 8) << (crcDataArg->config.bitLength - 8);
-		} else {
+		}
+		else
+		{
 			checksum ^= arrayArg[byte] << (crcDataArg->config.bitLength - 8);
 		}
-		for (uint8_t bit = 0; bit < 8; bit++) {
-			if ((checksum & highestBitPos) != 0) {
+		for (uint8_t bit = 0; bit < 8; bit++)
+		{
+			if ((checksum & highestBitPos) != 0)
+			{
 				checksum = (checksum << 1) ^ crcDataArg->config.polynomial;
-			} else {
+			}
+			else
+			{
 				checksum <<= 1;
 			}
 		}
 	}
-	if (crcDataArg->config.resultReflected) {
+	if (crcDataArg->config.resultReflected)
+	{
 		return (crcReflect(checksum, crcDataArg->config.bitLength) ^ crcDataArg->config.finalXorValue) & crcDataArg->automatic.bitLengthMask;
-	} else {
+	}
+	else
+	{
 		return (checksum ^ crcDataArg->config.finalXorValue) & crcDataArg->automatic.bitLengthMask;
 	}
 }
@@ -110,20 +130,28 @@ uint32_t crcCalcSlow(struct structCrcData* crcDataArg, uint8_t arrayArg[], uint8
  * @param[in] arraySizeArg size of arrayarg
  * @retval checksum masked depending on crc bitlength
  */
-uint32_t crcCalcFast(struct structCrcData* crcDataArg, uint8_t arrayArg[], uint8_t arraySizeArg) {
+uint32_t crcCalcFast(struct structCrcData *crcDataArg, uint8_t arrayArg[], uint8_t arraySizeArg)
+{
 	uint8_t index;
 	uint32_t checksum = crcDataArg->config.initialValue;
-	for (uint8_t byte = 0; byte < arraySizeArg; byte++) {
-		if (crcDataArg->config.inputReflected) {
+	for (uint8_t byte = 0; byte < arraySizeArg; byte++)
+	{
+		if (crcDataArg->config.inputReflected)
+		{
 			index = crcReflect(arrayArg[byte], 8) ^ (checksum >> (crcDataArg->config.bitLength - 8));
-		} else {
+		}
+		else
+		{
 			index = arrayArg[byte] ^ (checksum >> (crcDataArg->config.bitLength - 8));
 		}
 		checksum = crcDataArg->automatic.lookUpTable[index] ^ (checksum << 8);
 	}
-	if (crcDataArg->config.resultReflected) {
+	if (crcDataArg->config.resultReflected)
+	{
 		return (crcReflect(checksum, crcDataArg->config.bitLength) ^ crcDataArg->config.finalXorValue) & crcDataArg->automatic.bitLengthMask;
-	} else {
+	}
+	else
+	{
 		return (checksum ^ crcDataArg->config.finalXorValue) & crcDataArg->automatic.bitLengthMask;
 	}
 }
@@ -134,11 +162,14 @@ uint32_t crcCalcFast(struct structCrcData* crcDataArg, uint8_t arrayArg[], uint8
  * @param[in] bitSequenceWidthArg bit length of bitsequencearg
  * @retval reflected bitsequencearg
  */
-static uint32_t crcReflect(uint32_t bitSequenceArg, uint8_t bitSequenceWidthArg) {
+static uint32_t crcReflect(uint32_t bitSequenceArg, uint8_t bitSequenceWidthArg)
+{
 	uint32_t reflection = 0;
 	uint8_t i;
-	for (i = 0; i < bitSequenceWidthArg; ++i) {
-		if (bitSequenceArg & 1) {
+	for (i = 0; i < bitSequenceWidthArg; ++i)
+	{
+		if (bitSequenceArg & 1)
+		{
 			reflection |= 1 << (bitSequenceWidthArg - 1 - i);
 		}
 		bitSequenceArg >>= 1;
@@ -150,14 +181,20 @@ static uint32_t crcReflect(uint32_t bitSequenceArg, uint8_t bitSequenceWidthArg)
  * @brief populate the lookup table
  * @param[in] crcDataArg struct pointer containing crcData config and data
  */
-static void crcCalcTable(struct structCrcData* crcDataArg) {
+static void crcCalcTable(struct structCrcData *crcDataArg)
+{
 	uint32_t highestBitPos = 1 << (crcDataArg->config.bitLength - 1);
-	for (uint16_t byte = 0; byte < 256; byte++) {
+	for (uint16_t byte = 0; byte < 256; byte++)
+	{
 		uint32_t checksum = byte;
-		for (uint8_t bit = 0; bit < crcDataArg->config.bitLength; bit++) {
-			if ((checksum & highestBitPos) != 0) {
+		for (uint8_t bit = 0; bit < crcDataArg->config.bitLength; bit++)
+		{
+			if ((checksum & highestBitPos) != 0)
+			{
 				checksum = (checksum << 1) ^ crcDataArg->config.polynomial;
-			} else {
+			}
+			else
+			{
 				checksum <<= 1;
 			}
 		}
@@ -171,31 +208,46 @@ static void crcCalcTable(struct structCrcData* crcDataArg) {
  * @param[in] hexOutputArg print as hex if true, else as decimal
  * @param[in] tableFormatArg print into a block if true, else long string
  */
-void crcCalcTablePrint(struct structCrcData* crcDataArg, bool hexOutputArg, bool tableFormatArg) {
+void crcCalcTablePrint(struct structCrcData *crcDataArg, bool hexOutputArg, bool tableFormatArg)
+{
 	uint16_t index = 0;
 	uint8_t columns = 0;
 	PRINT("\x1B[30;47m\n// clang-format off\n");
 	PRINT("uint%d_t lookUpTable[256] = { \\\n", crcDataArg->config.bitLength);
 	columns = (crcDataArg->config.bitLength == 32 ? 8 : 16);
-	while (index < 256) {
-		if (hexOutputArg) {
+	while (index < 256)
+	{
+		if (hexOutputArg)
+		{
 			PRINT("0x%0*luX", crcDataArg->config.bitLength / 4, crcDataArg->automatic.lookUpTable[index]);
-		} else {
+		}
+		else
+		{
 			PRINT("%lu", crcDataArg->automatic.lookUpTable[index]);
 		}
 		index++;
-		if (tableFormatArg) {
-			if (index % columns != 0) {
+		if (tableFormatArg)
+		{
+			if (index % columns != 0)
+			{
 				PRINT(", ");
-			} else {
-				if (index != 256) {
+			}
+			else
+			{
+				if (index != 256)
+				{
 					PRINT(", \\\n");
-				} else {
+				}
+				else
+				{
 					PRINT("  \\");
 				}
 			}
-		} else {
-			if (index != 256) {
+		}
+		else
+		{
+			if (index != 256)
+			{
 				PRINT(", ");
 			}
 		}
@@ -206,7 +258,8 @@ void crcCalcTablePrint(struct structCrcData* crcDataArg, bool hexOutputArg, bool
 // SPIQUEUE -----------------------------------------------------------------------------------------------------------------
 
 /** @brief structure definition for the lexicon */
-struct structLexicon {
+struct structLexicon
+{
 	uint8_t identifier;		  /**< ID code */
 	uint8_t dataType;		  /**< C datatype */
 	uint8_t varString[32];	  /**< Printable variable name */
@@ -214,7 +267,8 @@ struct structLexicon {
 };
 
 /** @brief supported datatypes */
-enum lexiconDataTypes {
+enum lexiconDataTypes
+{
 	X,		/**< BAD */
 	BINARY, /**< boolean */
 	UINT8,	/**< unsigned integer 8bit*/
@@ -234,8 +288,9 @@ const struct structLexicon lexicon[] = {
 	{0x00, X,		"X",					"X"			},
 	{0xFF, X,		"X",					"X"			},
 
-// FILLER	
+// MISC	
 	{0x01, UINT8,	"Filler",				"F"			},
+	{0xA9, UINT32,	"Test latency",			"100us"		},
 
 // TEST	
 	{0xA0, UINT8,	"Test UINT8",			"T"			},
@@ -247,7 +302,6 @@ const struct structLexicon lexicon[] = {
 	{0xA6, FRAC32,	"Test FRAC32",			"T"			},
 	{0xA7, FRAC64,	"Test FRAC64",			"T"			},
 	{0xA8, BINARY,	"Test BINARY",			"T"			},
-	{0xA9, UINT32,	"Test latency",			"100us"		},
 
 // OUTBOUND	
 	{0xB1, FRAC64,	"Setpoint battery 1",	"kW"		},
@@ -275,16 +329,19 @@ const struct structLexicon lexicon[] = {
  * @retval 0 on success, -1 on failure
  * @note - equipped with errorCatcher()
  */
-int8_t spiQueueCreate(struct structSpiQueue** structSpiQueuePtrArg, uint8_t sizeMaxArg) {
+int8_t spiQueueCreate(struct structSpiQueue **structSpiQueuePtrArg, uint8_t sizeMaxArg)
+{
 	// check if spiqueue already exists
-	if (*structSpiQueuePtrArg != NULL) {
+	if (*structSpiQueuePtrArg != NULL)
+	{
 		errorCatcher(ec_sq_already_exist);
 		return -1;
 	}
 	// malloc new spiqueue
-	struct structSpiQueue* newStructSpiQueue = malloc(sizeof(struct structSpiQueue));
+	struct structSpiQueue *newStructSpiQueue = malloc(sizeof(struct structSpiQueue));
 	// check if malloc was successful
-	if (newStructSpiQueue == NULL) {
+	if (newStructSpiQueue == NULL)
+	{
 		errorCatcher(ec_sq_malloc_failed);
 		return -1;
 	}
@@ -304,15 +361,19 @@ int8_t spiQueueCreate(struct structSpiQueue** structSpiQueuePtrArg, uint8_t size
  * @retval 0 on success, -1 on failure
  * @note - equipped with errorcatcher()
  */
-int8_t spiQueueRemove(struct structSpiQueue** structSpiQueuePtrArg) {
+int8_t spiQueueRemove(struct structSpiQueue **structSpiQueuePtrArg)
+{
 	// check if ptr is not zero
-	if (*structSpiQueuePtrArg == NULL) {
+	if (*structSpiQueuePtrArg == NULL)
+	{
 		errorCatcher(ec_sq_doesnt_exist);
 		return -1;
 	}
 	// remove all packets
-	while ((*structSpiQueuePtrArg)->headPacketPtr != NULL) {
-		if (spiQueuePacketRemove(*structSpiQueuePtrArg)) {
+	while ((*structSpiQueuePtrArg)->headPacketPtr != NULL)
+	{
+		if (spiQueuePacketRemove(*structSpiQueuePtrArg))
+		{
 			errorCatcher(ec_sq_remove_failed);
 			return -1;
 		}
@@ -333,11 +394,13 @@ int8_t spiQueueRemove(struct structSpiQueue** structSpiQueuePtrArg) {
  * @retval pointer to the new packet
  * @note - equipped with errorcatcher()
  */
-static struct structPacket* spiQueuePacketAppend(uint8_t arrayArg[]) {
+static struct structPacket *spiQueuePacketAppend(uint8_t arrayArg[])
+{
 	// malloc new packet
-	struct structPacket* newPacket = malloc(sizeof(struct structPacket));
+	struct structPacket *newPacket = malloc(sizeof(struct structPacket));
 	// check if malloc was successful
-	if (newPacket == NULL) {
+	if (newPacket == NULL)
+	{
 		errorCatcher(ec_sq_packet_malloc_failed);
 		return NULL;
 	}
@@ -361,21 +424,26 @@ static struct structPacket* spiQueuePacketAppend(uint8_t arrayArg[]) {
  * @retval 0 on success, -1 on failure
  * @note - equipped with errorcatcher()
  */
-int8_t spiQueuePacketRemove(struct structSpiQueue* structSpiQueuePtrArg) {
+int8_t spiQueuePacketRemove(struct structSpiQueue *structSpiQueuePtrArg)
+{
 	// check if a single packet is present
-	if (structSpiQueuePtrArg->headPacketPtr == NULL) {
+	if (structSpiQueuePtrArg->headPacketPtr == NULL)
+	{
 		errorCatcher(ec_sq_no_packet_exists);
 		return -1;
 	}
 	// when single frame reset head and tail ptrs to null
-	if (structSpiQueuePtrArg->headPacketPtr == structSpiQueuePtrArg->tailPacketPtr) {
+	if (structSpiQueuePtrArg->headPacketPtr == structSpiQueuePtrArg->tailPacketPtr)
+	{
 		structSpiQueuePtrArg->sizeCurrent--;
 		free(structSpiQueuePtrArg->headPacketPtr);
 		structSpiQueuePtrArg->headPacketPtr = NULL;
 		structSpiQueuePtrArg->tailPacketPtr = NULL;
 		// when multiple frames move head ptr
-	} else {
-		struct structPacket* previousheadPacketPtr = structSpiQueuePtrArg->headPacketPtr;
+	}
+	else
+	{
+		struct structPacket *previousheadPacketPtr = structSpiQueuePtrArg->headPacketPtr;
 		structSpiQueuePtrArg->headPacketPtr = structSpiQueuePtrArg->headPacketPtr->nextPacketPtr;
 		structSpiQueuePtrArg->sizeCurrent--;
 		free(previousheadPacketPtr);
@@ -395,27 +463,33 @@ int8_t spiQueuePacketRemove(struct structSpiQueue* structSpiQueuePtrArg) {
  * @retval 0 on success, -1 on failure
  * @note - equipped with errorcatcher()
  */
-int8_t spiQueuePostArray(struct structSpiQueue* structSpiQueuePtrArg, uint8_t arrayArg[], uint8_t arraySizeArg, bool crcCheckArg) {
+int8_t spiQueuePostArray(struct structSpiQueue *structSpiQueuePtrArg, uint8_t arrayArg[], uint8_t arraySizeArg, bool crcCheckArg)
+{
 	// check if spiqueue exists
-	if (structSpiQueuePtrArg == NULL) {
+	if (structSpiQueuePtrArg == NULL)
+	{
 		errorCatcher(ec_sq_doesnt_exist_post);
 		return -1;
 	}
 	// check if spiqueue is full
-	if (structSpiQueuePtrArg->sizeCurrent >= structSpiQueuePtrArg->sizeMax) {
+	if (structSpiQueuePtrArg->sizeCurrent >= structSpiQueuePtrArg->sizeMax)
+	{
 		errorCatcher(ec_sq_full);
 		return -1;
 	}
 	// check if array length is correct
-	if (arraySizeArg != SQ_PACKET_SIZE) {
+	if (arraySizeArg != SQ_PACKET_SIZE)
+	{
 		errorCatcher(ec_sq_incorrect_array_length);
 		return -1;
 	}
 	// appending first packet to spiqueue and increment packet count if spiqueuepacketappend succeeds
 	// head and tail point to same packet
-	if (structSpiQueuePtrArg->headPacketPtr == NULL) {
+	if (structSpiQueuePtrArg->headPacketPtr == NULL)
+	{
 		structSpiQueuePtrArg->headPacketPtr = spiQueuePacketAppend(arrayArg);
-		if (structSpiQueuePtrArg->headPacketPtr == NULL) {
+		if (structSpiQueuePtrArg->headPacketPtr == NULL)
+		{
 			// the failure to malloc a packet is already caught in spiqueuepacketappend
 			return -1;
 		}
@@ -423,9 +497,12 @@ int8_t spiQueuePostArray(struct structSpiQueue* structSpiQueuePtrArg, uint8_t ar
 		structSpiQueuePtrArg->tailPacketPtr = structSpiQueuePtrArg->headPacketPtr;
 		// append packet into non empty spiqueue and increment packet count if spiqueuepacketappend succeeds
 		// append packet to to the tail and move tail pointer
-	} else {
+	}
+	else
+	{
 		structSpiQueuePtrArg->tailPacketPtr->nextPacketPtr = spiQueuePacketAppend(arrayArg);
-		if (structSpiQueuePtrArg->tailPacketPtr->nextPacketPtr == NULL) {
+		if (structSpiQueuePtrArg->tailPacketPtr->nextPacketPtr == NULL)
+		{
 			// the failure to malloc a packet is already caught in spiqueuepacketappend
 			return -1;
 		}
@@ -433,9 +510,11 @@ int8_t spiQueuePostArray(struct structSpiQueue* structSpiQueuePtrArg, uint8_t ar
 		structSpiQueuePtrArg->tailPacketPtr = structSpiQueuePtrArg->tailPacketPtr->nextPacketPtr;
 	}
 	// check crc and set crcverified if crccheckarg
-	if (crcCheckArg) {
+	if (crcCheckArg)
+	{
 		structSpiQueuePtrArg->tailPacketPtr->crc.verified = true;
-		if (structSpiQueuePtrArg->tailPacketPtr->crc.value.uint16 == GETCRC(arrayArg)) {
+		if (structSpiQueuePtrArg->tailPacketPtr->crc.value.uint16 == GETCRC(arrayArg))
+		{
 			structSpiQueuePtrArg->tailPacketPtr->crc.good = true;
 		}
 	}
@@ -447,9 +526,11 @@ int8_t spiQueuePostArray(struct structSpiQueue* structSpiQueuePtrArg, uint8_t ar
  * @param[in] identifierArg a predefined id recorded by the lexicon used to distinguish variables
  * @retval datatype enum
  */
-static int16_t spiQueueFindType(uint8_t identifierArg) {
+static int16_t spiQueueFindType(uint8_t identifierArg)
+{
 	// check if id is legal
-	if (identifierArg == 0x00 || identifierArg == 0xFF) {
+	if (identifierArg == 0x00 || identifierArg == 0xFF)
+	{
 		errorCatcher(ec_sq_bad_id);
 		return -1;
 	}
@@ -457,8 +538,10 @@ static int16_t spiQueueFindType(uint8_t identifierArg) {
 	// index scope for loop and return
 	uint8_t index;
 	uint8_t lexiconHighestIndex = (sizeof(lexicon) / sizeof(lexicon[0])) - 1;
-	for (index = 0; index < lexiconHighestIndex; index++) {
-		if (lexicon[index].identifier == identifierArg) {
+	for (index = 0; index < lexiconHighestIndex; index++)
+	{
+		if (lexicon[index].identifier == identifierArg)
+		{
 			break;
 		}
 	}
@@ -474,16 +557,19 @@ static int16_t spiQueueFindType(uint8_t identifierArg) {
  * @retval 0 on success, -1 on failure
  * @note - equipped with errorcatcher()
  */
-int8_t spiQueuePostInt(struct structSpiQueue* structSpiQueuePtrArg, uint8_t identifierArg, int64_t payloadValueArg) {
+int8_t spiQueuePostInt(struct structSpiQueue *structSpiQueuePtrArg, uint8_t identifierArg, int64_t payloadValueArg)
+{
 	// create temporary variables
 	uint8_t arrayTemp[SQ_PACKET_SIZE] = {0};
 	union unionPayload payloadTemp = {0};
 	// set id
 	arrayTemp[SQ_ID_INDEX] = identifierArg;
 	// switch case on datatype
-	switch (spiQueueFindType(identifierArg)) {
+	switch (spiQueueFindType(identifierArg))
+	{
 	case BINARY:
-		if (payloadValueArg != 0 && payloadValueArg != 1) {
+		if (payloadValueArg != 0 && payloadValueArg != 1)
+		{
 			errorCatcher(ec_sq_payload_out_of_range_binary);
 			return -1;
 		}
@@ -492,7 +578,8 @@ int8_t spiQueuePostInt(struct structSpiQueue* structSpiQueuePtrArg, uint8_t iden
 		break;
 	// for integer cases check if payloadvaluearg is within legal range
 	case UINT8:
-		if (payloadValueArg < 0 || payloadValueArg > UINT8_MAX) {
+		if (payloadValueArg < 0 || payloadValueArg > UINT8_MAX)
+		{
 			errorCatcher(ec_sq_payload_out_of_range_uint8);
 			return -1;
 		}
@@ -500,7 +587,8 @@ int8_t spiQueuePostInt(struct structSpiQueue* structSpiQueuePtrArg, uint8_t iden
 		memcpy(arrayTemp + SQ_PAYLOAD_INDEX, payloadTemp.uint8, 1);
 		break;
 	case UINT16:
-		if (payloadValueArg < 0 || payloadValueArg > UINT16_MAX) {
+		if (payloadValueArg < 0 || payloadValueArg > UINT16_MAX)
+		{
 			errorCatcher(ec_sq_payload_out_of_range_uint16);
 			return -1;
 		}
@@ -508,7 +596,8 @@ int8_t spiQueuePostInt(struct structSpiQueue* structSpiQueuePtrArg, uint8_t iden
 		memcpy(arrayTemp + SQ_PAYLOAD_INDEX, payloadTemp.uint8, 2);
 		break;
 	case UINT32:
-		if (payloadValueArg < 0 || payloadValueArg > UINT32_MAX) {
+		if (payloadValueArg < 0 || payloadValueArg > UINT32_MAX)
+		{
 			errorCatcher(ec_sq_payload_out_of_range_uint32);
 			return -1;
 		}
@@ -516,7 +605,8 @@ int8_t spiQueuePostInt(struct structSpiQueue* structSpiQueuePtrArg, uint8_t iden
 		memcpy(arrayTemp + SQ_PAYLOAD_INDEX, payloadTemp.uint8, 4);
 		break;
 	case SINT8:
-		if (payloadValueArg < INT8_MIN || payloadValueArg > INT8_MAX) {
+		if (payloadValueArg < INT8_MIN || payloadValueArg > INT8_MAX)
+		{
 			errorCatcher(ec_sq_payload_out_of_range_sint8);
 			return -1;
 		}
@@ -524,7 +614,8 @@ int8_t spiQueuePostInt(struct structSpiQueue* structSpiQueuePtrArg, uint8_t iden
 		memcpy(arrayTemp + SQ_PAYLOAD_INDEX, payloadTemp.uint8, 1);
 		break;
 	case SINT16:
-		if (payloadValueArg < INT16_MIN || payloadValueArg > INT16_MAX) {
+		if (payloadValueArg < INT16_MIN || payloadValueArg > INT16_MAX)
+		{
 			errorCatcher(ec_sq_payload_out_of_range_sint16);
 			return -1;
 		}
@@ -532,7 +623,8 @@ int8_t spiQueuePostInt(struct structSpiQueue* structSpiQueuePtrArg, uint8_t iden
 		memcpy(arrayTemp + SQ_PAYLOAD_INDEX, payloadTemp.uint8, 2);
 		break;
 	case SINT32:
-		if (payloadValueArg < INT32_MIN || payloadValueArg > INT32_MAX) {
+		if (payloadValueArg < INT32_MIN || payloadValueArg > INT32_MAX)
+		{
 			errorCatcher(ec_sq_payload_out_of_range_sint32);
 			return -1;
 		}
@@ -571,14 +663,16 @@ int8_t spiQueuePostInt(struct structSpiQueue* structSpiQueuePtrArg, uint8_t iden
  * @retval 0 on success, -1 on failure
  * @note - equipped with errorcatcher()
  */
-int8_t spiQueuePostFrac(struct structSpiQueue* structSpiQueuePtrArg, uint8_t identifierArg, double payloadValueArg) {
+int8_t spiQueuePostFrac(struct structSpiQueue *structSpiQueuePtrArg, uint8_t identifierArg, double payloadValueArg)
+{
 	// create temporary variables
 	uint8_t arrayTemp[SQ_PACKET_SIZE] = {0};
 	union unionPayload payloadTemp = {0};
 	// set id
 	arrayTemp[SQ_ID_INDEX] = identifierArg;
 	// switch case on datatype
-	switch (spiQueueFindType(identifierArg)) {
+	switch (spiQueueFindType(identifierArg))
+	{
 	case FRAC32:
 		payloadTemp.frac32 = payloadValueArg;
 		memcpy(arrayTemp + SQ_PAYLOAD_INDEX, payloadTemp.uint8, 4);
@@ -609,15 +703,18 @@ int8_t spiQueuePostFrac(struct structSpiQueue* structSpiQueuePtrArg, uint8_t ide
  * @retval 0 on success, -1 on failure
  * @note - equipped with errorcatcher()
  */
-int8_t spiQueueGetArray(struct structSpiQueue* structSpiQueuePtrArg, uint8_t arrayArg[], uint8_t arraySizeArg) {
+int8_t spiQueueGetArray(struct structSpiQueue *structSpiQueuePtrArg, uint8_t arrayArg[], uint8_t arraySizeArg)
+{
 	// Check if packet exists
-	if (structSpiQueuePtrArg->headPacketPtr == NULL) {
+	if (structSpiQueuePtrArg->headPacketPtr == NULL)
+	{
 		// errorCatcher(ec_sq_no_packet_exists_get);
 		// return -1;
 		spiQueuePostInt(structSpiQueuePtrArg, ID_FILLER, 0x00);
 	}
 	// check if array length is correct
-	if (arraySizeArg != SQ_PACKET_SIZE) {
+	if (arraySizeArg != SQ_PACKET_SIZE)
+	{
 		errorCatcher(ec_sq_incorrect_array_length);
 		return -1;
 	}
@@ -635,12 +732,17 @@ int8_t spiQueueGetArray(struct structSpiQueue* structSpiQueuePtrArg, uint8_t arr
 /**
  * @brief placeholder
  */
-int8_t spiQueueProcessAck(struct structSpiQueue* spiQueueTransmitPtrArg, struct structSpiQueue* spiQueueReceivePtrArg, bool ignoreAck) {
-	if (ignoreAck) {
-		if (spiQueueTransmitPtrArg->sizeCurrent > 0) {
+int8_t spiQueueProcessAck(struct structSpiQueue *spiQueueTransmitPtrArg, struct structSpiQueue *spiQueueReceivePtrArg, bool ignoreAck)
+{
+	if (ignoreAck)
+	{
+		if (spiQueueTransmitPtrArg->sizeCurrent > 0)
+		{
 			spiQueuePacketRemove(spiQueueTransmitPtrArg);
 		}
-	} else {
+	}
+	else
+	{
 		errorCatcher(ec_sq_not_implemented);
 		return -1;
 	}
@@ -655,18 +757,23 @@ int8_t spiQueueProcessAck(struct structSpiQueue* spiQueueTransmitPtrArg, struct 
  * @retval 0 on success, -1 on failure
  * @note - equipped with errorcatcher()
  */
-int8_t spiQueueNoDuplicate(bool* duplicateArg, uint8_t arrayArg[], uint8_t arraySizeArg) {
+int8_t spiQueueNoDuplicate(bool *duplicateArg, uint8_t arrayArg[], uint8_t arraySizeArg)
+{
 	// check if array length is correct
-	if (arraySizeArg != SQ_PACKET_SIZE) {
+	if (arraySizeArg != SQ_PACKET_SIZE)
+	{
 		errorCatcher(ec_sq_incorrect_array_length);
 		return -1;
 	}
 	// persistent array to hold previous value
 	static uint8_t memoryArray[SQ_PACKET_SIZE] = {0};
-	if (memcmp(memoryArray, arrayArg, SQ_PACKET_SIZE) == 0) {
+	if (memcmp(memoryArray, arrayArg, SQ_PACKET_SIZE) == 0)
+	{
 		// they are the same therefore duplicate=true -> NO!_duplicate=false
 		*duplicateArg = false;
-	} else {
+	}
+	else
+	{
 		*duplicateArg = true;
 		memcpy(memoryArray, arrayArg, SQ_PACKET_SIZE);
 	}
