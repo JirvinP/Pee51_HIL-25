@@ -32,7 +32,7 @@ gtest_add_tests(TARGET unittest TEST_LIST gtest_list)
 set(valgrindCommand valgrind -s --leak-check=full --show-leak-kinds=all --errors-for-leak-kinds=all --undef-value-errors=no --error-exitcode=1 ./unittest)
 foreach(case IN LISTS gtest_list)
   if(case MATCHES ^spiQueueTest.)
-    add_test(NAME ${case}_vallgrind COMMAND ${valgrindCommand} --gtest_filter=${case})
+    add_test(NAME ${case}_valgrind COMMAND ${valgrindCommand} --gtest_filter=${case})
   endif()
 endforeach()
 

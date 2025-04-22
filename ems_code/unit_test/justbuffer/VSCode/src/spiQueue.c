@@ -2,8 +2,8 @@
  * @file spiQueue.c
  * @author Sefa Ozturk (S.H.Ozturk@outlook.com)
  * @brief queue for use with SPI
- * @version 0.5
- * @date 2025-01-28
+ * @version 0.6
+ * @date 2025-04-22
  */
 
 #include "spiQueue.h"
@@ -179,9 +179,9 @@ void crcCalcTablePrint(struct structCrcData* crcDataArg, bool hexOutputArg, bool
 	columns = (crcDataArg->config.bitLength == 32 ? 8 : 16);
 	while (index < 256) {
 		if (hexOutputArg) {
-			PRINT("0x%0*uX", crcDataArg->config.bitLength / 4, crcDataArg->automatic.lookUpTable[index]);
+			PRINT("0x%0*luX", crcDataArg->config.bitLength / 4, crcDataArg->automatic.lookUpTable[index]);
 		} else {
-			PRINT("%u", crcDataArg->automatic.lookUpTable[index]);
+			PRINT("%lu", crcDataArg->automatic.lookUpTable[index]);
 		}
 		index++;
 		if (tableFormatArg) {

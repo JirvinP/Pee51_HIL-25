@@ -10,8 +10,8 @@
  * @file spiQueue.h
  * @author Sefa Ozturk (S.H.Ozturk@outlook.com)
  * @brief queue for use with SPI
- * @version 0.5
- * @date 2025-01-28
+ * @version 0.6
+ * @date 2025-04-22
  */
 
 #ifndef SPIQUEUE_H
@@ -32,7 +32,6 @@
  */
 #define VSCODEPROJECT	1 /**< switch between vscode or st environment */
 #define NOPRINT			0 /**< disables all print calls */
-#define NOERRORPRINT	1 /**< disables error print calls */
  /** @} */
 
 /**
@@ -88,7 +87,6 @@ extern CRC_HandleTypeDef hcrc;
 #define GETCRC(ARRAY) HAL_CRC_Calculate(&hcrc, (uint32_t*)ARRAY, SQ_FRAME_SIZE)
 /** @brief overload macro which will transform into spiqueuepostint or spiqueuepostfrac depending on payloadvaluearg */
 #define spiQueuePost(structSpiQueuePtrArg, identifierArg, payloadValueArg) _Generic((payloadValueArg), \
-	int: spiQueuePostInt,                                                                              \
 	uint8_t: spiQueuePostInt,                                                                          \
 	uint16_t: spiQueuePostInt,                                                                         \
 	uint32_t: spiQueuePostInt,                                                                         \
@@ -164,7 +162,11 @@ struct structCrcDataAutomatic {
 struct structCrcData {
 	struct structCrcConfig config;			 /**< holds crcdata config paramaters */
 	struct structCrcDataAutomatic automatic; /**< holds crcdata data inititialized by crcinit() */
-} crcData = {0};
+};
+
+#if VSCODEPROJECT
+	struct structCrcData crcData = {0};
+#endif
 
 /**
  * @brief crc value sub struct for converting crcvalue between two uint8[2]s and uint16
